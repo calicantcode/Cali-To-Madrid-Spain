@@ -1,0 +1,128 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cali’s Madrid Fundraiser</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>Cali’s Madrid Study Abroad Fundraiser</h1>
+        <p>Help me reach my goal of $3,000 for my study abroad in Madrid!</p>
+    </header>
+
+    <section id="donate">
+        <h2>Make a Donation</h2>
+        <iframe src="https://docs.google.com/forms/d/e/15iNxSEXy-qHKFTBKppdmE1UwpZnZSlapqIeA52bGq1s/viewform?embedded=true" width="640" height="800" frameborder="0">Loading…</iframe>
+    </section>
+
+    <section id="progress">
+        <h2>Fundraising Progress</h2>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <p id="progressText">$0 raised out of $3,000</p>
+    </section>
+
+    <section id="messages">
+        <h2>Donor Messages</h2>
+        <div id="donorMessages"></div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    background-color: #f4f4f4;
+}
+
+header {
+    background: #ff6f61;
+    color: white;
+    padding: 20px;
+}
+
+h1, h2 {
+    margin: 10px 0;
+}
+
+.progress-container {
+    width: 80%;
+    background: #ddd;
+    margin: 20px auto;
+    height: 25px;
+    border-radius: 5px;
+}
+
+.progress-bar {
+    height: 25px;
+    background: #4caf50;
+    width: 0%;
+    border-radius: 5px;
+}
+
+#donorMessages {
+    background: white;
+    padding: 20px;
+    width: 80%;
+    margin: auto;
+    border-radius: 5px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+// Google Sheets API URL (Replace with your Google Sheets API URL)
+const SHEET_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AKfycbwbd9VIKx6U-UouQFXisOGWLXAkRFdhyF75kXA6Q2UYkFn89tJCdVUGs3lvU6q8z2jJ0A";
+
+// Fetch donation data and update progress
+async function updateProgress() {
+    try {
+        const response = await fetch(SHEET_URL);
+        const data = await response.json();
+
+        let totalRaised = data.total;  // Total donations from Google Sheets
+        let goal = 3000;  // Fundraising goal
+
+        let percentage = (totalRaised / goal) * 100;
+        document.getElementById("progressBar").style.width = percentage + "%";
+        document.getElementById("progressText").innerText = `$${totalRaised} raised out of $3,000`;
+    } catch (error) {
+        console.error("Error fetching donation data:", error);
+    }
+}
+
+// Fetch donor messages and display them
+async function loadMessages() {
+    try {
+        const response = await fetch(SHEET_URL);
+        const data = await response.json();
+
+        let messagesContainer = document.getElementById("donorMessages");
+        messagesContainer.innerHTML = "";
+
+        data.messages.forEach(msg => {
+            let messageElement = document.createElement("p");
+            messageElement.innerHTML = `<strong>${msg.name}:</strong> "${msg.message}"`;
+            messagesContainer.appendChild(messageElement);
+        });
+    } catch (error) {
+        console.error("Error loading messages:", error);
+    }
+}
+
+// Refresh progress and messages every 10 seconds
+setInterval(() => {
+    updateProgress();
+    loadMessages();
+}, 10000);
+
+updateProgress();
+loadMessages();
